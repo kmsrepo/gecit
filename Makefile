@@ -1,7 +1,7 @@
 DARWIN_ARM64_CC ?= clang -arch arm64
 DARWIN_AMD64_CC ?= clang -arch x86_64
 
-.PHONY: all clean gecit-linux-amd64 gecit-linux-arm64 gecit-darwin-arm64 gecit-darwin-amd64 gecit-windows-amd64 \
+.PHONY: all clean gecit-linux-amd64 gecit-linux-arm64 gecit-darwin-arm64 gecit-darwin-amd64 gecit-windows-amd64 gecit-android-arm64 \
         bpf-all bpf-clean bpf-translate bpf-compile install-gobee
 
 all: gecit-linux-amd64 gecit-linux-arm64
@@ -45,6 +45,9 @@ gecit-darwin-amd64:
 		CGO_CFLAGS="-mmacosx-version-min=11.0" \
 		CGO_LDFLAGS="-mmacosx-version-min=11.0" \
 		go build -tags with_gvisor -o bin/gecit-darwin-amd64 ./cmd/gecit
+
+gecit-android-arm64: bpf-all
+	GOOS=android GOARCH=arm64 CGO_ENABLED=0 go build -tags with_gvisor -o bin/gecit-android-arm64 ./cmd/gecit
 
 gecit-windows-amd64:
 	@if [ -z "$(NPCAP_SDK)" ]; then \
