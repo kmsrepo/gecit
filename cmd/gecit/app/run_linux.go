@@ -84,8 +84,12 @@ func (e *ebpfEngine) Start(ctx context.Context) error {
 			return err
 		}
 		if err := gecitdns.SetSystemDNS(); err != nil {
-			e.dns.Stop()
-			return err
+			if gecitdns.IsResolvConfNotFound(err) {
+				e.logger.WithError(err).Warn("resolv.conf not found; keeping DoH active for eBPF DNS redirect")
+			} else {
+				e.dns.Stop()
+				return err
+			}
 		}
 		e.logger.Info("encrypted DNS active")
 	}
