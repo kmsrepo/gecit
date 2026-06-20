@@ -36,11 +36,11 @@ Additionally, some ISPs poison DNS responses. gecit includes a built-in DoH (DNS
 
 ## Requirements
 
-| | Linux | macOS | Windows |
-|---|---|---|---|
-| **OS** | Kernel 5.10+ | macOS 12+ (Monterey) | Windows 10+ |
-| **Privileges** | root / sudo | root / sudo | Administrator |
-| **Dependencies** | None | None | [Npcap](https://npcap.com) |
+| | Linux | Android | macOS | Windows |
+|---|---|---|---|---|
+| **OS** | Kernel 5.10+ | Android root shell with eBPF-capable kernel | macOS 12+ (Monterey) | Windows 10+ |
+| **Privileges** | root / sudo | root / su | root / sudo | Administrator |
+| **Dependencies** | None | None | None | [Npcap](https://npcap.com) |
 
 ### Windows notes
 
@@ -64,6 +64,11 @@ sudo ./gecit run
 curl -L https://github.com/boratanrikulu/gecit/releases/latest/download/gecit-linux-arm64 -o gecit
 chmod +x gecit
 sudo ./gecit run
+
+# Android (arm64) - eBPF engine with Android resolver DNS
+curl -L https://github.com/boratanrikulu/gecit/releases/latest/download/gecit-android-arm64 -o gecit
+chmod +x gecit
+./gecit run
 
 # macOS (Apple Silicon)
 curl -L https://github.com/boratanrikulu/gecit/releases/latest/download/gecit-darwin-arm64 -o gecit
@@ -90,6 +95,7 @@ cd gecit
 
 make gecit-linux-amd64    # Linux x86_64
 make gecit-linux-arm64    # Linux ARM64
+make gecit-android-arm64  # Android ARM64 (eBPF + Android DNS)
 make gecit-darwin-arm64   # macOS Apple Silicon
 make gecit-darwin-amd64   # macOS Intel
 make gecit-windows-amd64  # Windows x86_64 (requires Npcap SDK)
@@ -101,6 +107,7 @@ gecit sets up everything automatically:
 - **DoH DNS server** on `127.0.0.1:53` (bypasses DNS poisoning)
 - **System DNS** pointed to the local DoH server
 - **Linux**: eBPF program attached to cgroup (fake injection + MSS fragmentation)
+- **Android**: eBPF sock_ops engine with Android `ndc resolver` DNS setup instead of `/etc/resolv.conf`
 - **macOS/Windows**: TUN virtual interface with automatic routing (all apps intercepted)
 
 Press `Ctrl+C` to stop - everything is restored (DNS, routes, BPF programs). Windows requires [Npcap](https://npcap.com) for full DPI bypass support.

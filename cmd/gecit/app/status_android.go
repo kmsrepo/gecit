@@ -1,5 +1,3 @@
-//go:build linux && !android
-
 package app
 
 import (
@@ -10,10 +8,11 @@ import (
 )
 
 func printPlatformStatus() {
-	fmt.Printf("  engine:     ebpf-sockops\n")
+	fmt.Printf("  engine:     ebpf-sockops (Android)\n")
+	fmt.Printf("  dns:        Android resolver via ndc (no /etc/resolv.conf)\n")
 
 	if os.Geteuid() != 0 {
-		fmt.Printf("  (run with sudo for accurate capability detection)\n")
+		fmt.Printf("  (run with su/root for accurate capability detection)\n")
 		return
 	}
 

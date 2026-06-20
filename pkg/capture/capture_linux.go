@@ -1,3 +1,5 @@
+//go:build linux && !android
+
 package capture
 
 import "fmt"
