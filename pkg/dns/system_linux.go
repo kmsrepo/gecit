@@ -3,6 +3,7 @@
 package dns
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -10,13 +11,27 @@ import (
 
 const resolvConf = "/etc/resolv.conf"
 
+var resolvConfPath = resolvConf
+
+var errResolvConfNotFound = errors.New("resolv.conf not found")
+
+// IsResolvConfNotFound reports whether err means Linux has no resolv.conf to
+// rewrite. Callers can keep the local DoH server running and rely on their
+// packet-level DNS redirect path instead of failing startup.
+func IsResolvConfNotFound(err error) bool {
+	return errors.Is(err, errResolvConfNotFound)
+}
+
 // SetSystemDNS comments out existing nameservers and adds 127.0.0.1.
 // Original lines are preserved as "# gecit-saved: ..." so they survive
 // a crash — RestoreSystemDNS (or manual edit) can recover them.
 func SetSystemDNS() error {
-	orig, err := os.ReadFile(resolvConf)
+	orig, err := os.ReadFile(resolvConfPath)
 	if err != nil {
-		return fmt.Errorf("read %s: %w", resolvConf, err)
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("%w: %s", errResolvConfNotFound, resolvConfPath)
+		}
+		return fmt.Errorf("read %s: %w", resolvConfPath, err)
 	}
 
 	var lines []string
@@ -35,13 +50,16 @@ func SetSystemDNS() error {
 		}
 	}
 
-	return os.WriteFile(resolvConf, []byte(strings.Join(lines, "\n")+"\n"), 0644)
+	return os.WriteFile(resolvConfPath, []byte(strings.Join(lines, "\n")+"\n"), 0644)
 }
 
 // RestoreSystemDNS uncomments the original nameservers and removes gecit lines.
 func RestoreSystemDNS() error {
-	data, err := os.ReadFile(resolvConf)
+	data, err := os.ReadFile(resolvConfPath)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
 		return err
 	}
 
@@ -64,5 +82,5 @@ func RestoreSystemDNS() error {
 		lines = append(lines, "nameserver 8.8.8.8") // safe fallback
 	}
 
-	return os.WriteFile(resolvConf, []byte(strings.Join(lines, "\n")+"\n"), 0644)
+	return os.WriteFile(resolvConfPath, []byte(strings.Join(lines, "\n")+"\n"), 0644)
 }
